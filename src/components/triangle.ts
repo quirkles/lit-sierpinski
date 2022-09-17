@@ -6,13 +6,14 @@ import {v4} from 'uuid'
 
 
 const TAN60 = 1.73205080757
+const chunkSize = 50
 
 function getYatX(x: number): number {
     return TAN60 * x
 }
 
 function randomElOFArr<T>(items: T[]): T {
-    return items[Math.floor(Math.random()*items.length)]
+    return items[Math.floor(Math.random() * items.length)]
 }
 
 function randomIntInRange(min: number, max: number): number {
@@ -80,49 +81,60 @@ export class Triangle extends LitElement {
     }
 
     reset() {
-        const running = false;
+        this.running = false;
         this.points = [];
     }
 
     tick() {
         if (this.running) {
-            const vertex = randomElOFArr(this.vertices)
-            const newPoint: {
+            const points: {
+                x: number,
+                y: number,
+                id: string
+            }[] = [];
+            let fnScopeLastPoint: {
                 x: number,
                 y: number,
                 id?: string
             } = {
-                x: Math.round((this.lastPoint.x + vertex.x) / 2),
-                y: Math.round((this.lastPoint.y + vertex.y) / 2),
+                x: this.lastPoint.x,
+                y: this.lastPoint.y
+            }
+            while (points.length < chunkSize) {
+                const vertex = randomElOFArr(this.vertices)
+                fnScopeLastPoint = {
+                    x: Math.round((fnScopeLastPoint.x + vertex.x) / 2),
+                    y: Math.round((fnScopeLastPoint.y + vertex.y) / 2),
+                }
+
+                if (fnScopeLastPoint.y > Math.ceil(getYatX(fnScopeLastPoint.x))) {
+                    console.warn("Point outside triangle")
+                    console.warn('newPoint', fnScopeLastPoint)
+                    console.warn('height at x:', getYatX(fnScopeLastPoint.x))
+                }
+
+                (fnScopeLastPoint as {
+                    x: number,
+                    y: number,
+                    id: string,
+                }).id = v4()
+                points.push(fnScopeLastPoint as {
+                    x: number,
+                    y: number,
+                    id: string,
+                })
             }
 
-            if (newPoint.y > getYatX(newPoint.x)) {
-                console.warn("Point outside triangle")
-                console.warn('newPoint', newPoint)
-                console.warn('height at x:', getYatX(newPoint.x))
-            }
-
-            (newPoint as {
+            this.lastPoint = fnScopeLastPoint as {
                 x: number,
                 y: number,
                 id: string,
-            }).id =v4()
-
-            this.lastPoint = newPoint as {
-                x: number,
-                    y: number,
-                    id: string,
             }
 
-                // const initialY = randomIntInRange(0, getYatX(xInput))
-                this.points = [
-                    ...this.points,
-                    newPoint as {
-                        x: number,
-                        y: number,
-                        id: string,
-                    }
-                ]
+            this.points = [
+                ...this.points,
+                ...points
+            ]
             requestAnimationFrame(
                 () => this.tick()
             )

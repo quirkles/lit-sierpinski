@@ -13,8 +13,8 @@ export class Point extends LitElement {
       .point {
         position: absolute;
         background-color: black;
-        height: 4px;
-        width: 4px;
+        height: 2px;
+        width: 2px;
       }
   `;
 
